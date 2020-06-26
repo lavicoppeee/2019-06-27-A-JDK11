@@ -5,8 +5,10 @@
 package it.polito.tdp.crimes;
 
 import java.net.URL;
+import java.util.List;
 import java.util.ResourceBundle;
 
+import it.polito.tdp.crimes.model.Adiacenza;
 import it.polito.tdp.crimes.model.Model;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -25,16 +27,16 @@ public class CrimesController {
     private URL location;
 
     @FXML // fx:id="boxCategoria"
-    private ComboBox<?> boxCategoria; // Value injected by FXMLLoader
+    private ComboBox<String> boxCategoria; // Value injected by FXMLLoader
 
     @FXML // fx:id="boxAnno"
-    private ComboBox<?> boxAnno; // Value injected by FXMLLoader
+    private ComboBox<Integer> boxAnno; // Value injected by FXMLLoader
 
     @FXML // fx:id="btnAnalisi"
     private Button btnAnalisi; // Value injected by FXMLLoader
 
     @FXML // fx:id="boxArco"
-    private ComboBox<?> boxArco; // Value injected by FXMLLoader
+    private ComboBox<Adiacenza> boxArco; // Value injected by FXMLLoader
 
     @FXML // fx:id="btnPercorso"
     private Button btnPercorso; // Value injected by FXMLLoader
@@ -45,13 +47,34 @@ public class CrimesController {
     @FXML
     void doCreaGrafo(ActionEvent event) {
     	txtResult.clear();
-    	txtResult.appendText("Crea grafo...\n");
+    	String category = this.boxCategoria.getValue();
+    	Integer year = this.boxAnno.getValue();
+    	if(category == null || year == null) {
+    		txtResult.appendText("Selezionare entrambi i dati");
+    		return;
+    	}
+    	
+    	this.model.buildGraph(category, year);
+    	List<Adiacenza> list = this.model.getArchiPesoMax();
+    	txtResult.appendText("Peso max: "+list.get(0).getPeso()+"\n\n");
+    	for(Adiacenza a : list)
+    		txtResult.appendText(a.toString()+"\n");
+    	
+    	this.boxArco.getItems().setAll(list);
     }
 
     @FXML
     void doCalcolaPercorso(ActionEvent event) {
     	txtResult.clear();
-    	txtResult.appendText("Calcola percorso...\n");
+    	Adiacenza a = this.boxArco.getValue();
+    	if(a == null) {
+    		txtResult.appendText("Selezionare un arco");
+    		return;
+    	}
+    	
+    	List<String> path = this.model.trovaPercorsoMin(a);
+    	for(String s : path)
+    		txtResult.appendText(s+"\n");
     }
 
     @FXML // This method is called by the FXMLLoader when initialization is complete
@@ -67,5 +90,8 @@ public class CrimesController {
     
     public void setModel(Model model) {
     	this.model = model;
+    	
+    	this.boxCategoria.getItems().setAll(this.model.getOffenceCategory());
+    	this.boxAnno.getItems().setAll(this.model.getYears());
     }
 }
