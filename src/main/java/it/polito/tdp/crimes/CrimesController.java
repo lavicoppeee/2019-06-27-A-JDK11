@@ -4,6 +4,7 @@
 
 package it.polito.tdp.crimes;
 
+import java.util.List;
 import java.net.URL;
 import java.util.ResourceBundle;
 
@@ -25,16 +26,16 @@ public class CrimesController {
     private URL location;
 
     @FXML // fx:id="boxCategoria"
-    private ComboBox<?> boxCategoria; // Value injected by FXMLLoader
+    private ComboBox<String> boxCategoria; // Value injected by FXMLLoader
 
     @FXML // fx:id="boxAnno"
-    private ComboBox<?> boxAnno; // Value injected by FXMLLoader
+    private ComboBox<Integer> boxAnno; // Value injected by FXMLLoader
 
     @FXML // fx:id="btnAnalisi"
     private Button btnAnalisi; // Value injected by FXMLLoader
 
     @FXML // fx:id="boxArco"
-    private ComboBox<?> boxArco; // Value injected by FXMLLoader
+    private ComboBox<Arco> boxArco; // Value injected by FXMLLoader
 
     @FXML // fx:id="btnPercorso"
     private Button btnPercorso; // Value injected by FXMLLoader
@@ -45,13 +46,48 @@ public class CrimesController {
     @FXML
     void doCreaGrafo(ActionEvent event) {
     	txtResult.clear();
-    	txtResult.appendText("Crea grafo...\n");
+    	String cat=this.boxCategoria.getValue();
+    	if(cat==null) {
+        	txtResult.appendText("Seleziona una categoria\n");;
+        	return ;
+    	}
+    	
+    	
+       Integer anno=this.boxAnno.getValue();
+       if(anno==null) {
+       	txtResult.appendText("Seleziona un anno\n");;
+       	return ;
+   	}
+        this.model.creaGrafo(cat, anno);
+        
+        txtResult.appendText("Grafo Creato!\n");
+    	txtResult.appendText("# Vertici: " + model.nVertici()+ "\n");
+    	txtResult.appendText("# Archi: " + model.nArchi() + "\n");
+       
+        List<Arco> aList= this.model.getArchiPesoMax();
+       
+        txtResult.appendText("Peso max: "+aList.get(0).getPeso()+"\n\n");
+        for(Arco a:aList) {
+        	txtResult.appendText(a.toString()+"\n");
+        }
+        
+        this.boxArco.getItems().addAll(aList);
     }
 
     @FXML
     void doCalcolaPercorso(ActionEvent event) {
     	txtResult.clear();
-    	txtResult.appendText("Calcola percorso...\n");
+    	Arco a=this.boxArco.getValue();
+    	
+    	if(a == null) {
+    		txtResult.appendText("Selezionare un arco");
+    		return;
+    	}
+    	
+    	List<String> path = this.model.trovaPercorsoMin(a);
+    	for(String s : path)
+    		txtResult.appendText(s+"\n");
+    	
     }
 
     @FXML // This method is called by the FXMLLoader when initialization is complete
@@ -67,5 +103,7 @@ public class CrimesController {
     
     public void setModel(Model model) {
     	this.model = model;
+    	this.boxCategoria.getItems().addAll(model.getCategory());
+    	this.boxAnno.getItems().addAll(model.getAnno());
     }
 }
